@@ -190,6 +190,7 @@ mysql> select * from wp_posts;
 ```
 
 
+<img width="1335" height="498" alt="image" src="https://github.com/user-attachments/assets/48f59917-8b77-432b-a1cb-e0091af61c43" />
 
 
 
