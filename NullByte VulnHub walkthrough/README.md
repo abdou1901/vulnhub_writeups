@@ -1,5 +1,3 @@
-Okay, I understand. I will provide the writeup directly in this response.
-
 # NullByte VulnHub Challenge Writeup
 
 ## Overview
