@@ -1,5 +1,3 @@
-Okay, I understand. I will provide the writeup directly in the response.
-
 ## CH4INRULZ VulnHub Challenge Writeup
 
 ### Overview
