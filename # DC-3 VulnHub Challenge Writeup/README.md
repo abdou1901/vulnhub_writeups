@@ -262,5 +262,3 @@ The DC-3 challenge provided a practical scenario involving web application explo
 - `gcc`
 - `doubleput` (CVE-2016-4557 exploit)
 
-
-SuggestionsClose suggestions[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}Add IntegrationExplore other Joomla vulnerabilitiesAnalyze the bcrypt hashResearch other kernel exploitsPractice manual SQL injectionSet up a similar vulnerable environmentScroll leftScroll right
