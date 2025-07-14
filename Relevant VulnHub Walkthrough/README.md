@@ -353,4 +353,4 @@ The root flag was embedded in the ASCII art and the final message.
 2. **Root Flag:** Embedded in `/root/root.txt` ASCII art and message.
 
 
-SuggestionsClose suggestions[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}Add IntegrationLearn more about WordPress exploitationPractice Node.js privilege escalationExplore other user directories for cluesSet up a vulnerable WordPress instanceReview Nginx configurations for vulnerabilitiesScroll leftScroll right
+
