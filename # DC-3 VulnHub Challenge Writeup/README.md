@@ -102,7 +102,8 @@ With the `admin` credentials, I logged into the Joomla administrator panel at `h
 
 From the control panel, I navigated to **Extensions > Templates > Templates** and selected the `protostar` template. I then edited the `error.php` file. Inside `error.php`, I injected a PHP reverse shell payload.
 
-<img width="1366" height="683" alt="image" src="https://github.com/user-attachments/assets/d7c77544-64ef-4679-96f3-6a851898d4c9" />
+<img width="1366" height="682" alt="image" src="https://github.com/user-attachments/assets/2aaf1560-8af6-4a1a-a0f4-6c402f8c5f01" />
+
 
 
 The injected payload was:
