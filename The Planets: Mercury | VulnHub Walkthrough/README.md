@@ -355,6 +355,3 @@ The Mercury challenge was a great exercise in web application and Linux privileg
 - `base64`
 - `chmod`
 - `cp`
-
-
-SuggestionsClose suggestions[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}Add IntegrationReview Django security best practicesExplore other Linux privilege escalation techniquesSet up a vulnerable Django environmentUnderstand SUID and SGID binariesPractice manual SQL injection techniquesScroll leftScroll right
